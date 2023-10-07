@@ -10,7 +10,7 @@ class RamUsageInfo:
         print('\nSWAP\n----')
         # self.pprint_ntuple(psutil.swap_memory())
 
-    def print_virtual_memory_info(self):
+    def get_info(self):
         virtual_memory = psutil.virtual_memory()
         total = bytes2human(virtual_memory.total)
         available = bytes2human(virtual_memory.available)
@@ -20,7 +20,10 @@ class RamUsageInfo:
                     f'Доступно:          {available}\n' \
                     f'Использовано:      {used}\n' \
                     f'Использовано(%):   {percent}%'
-        print(info_text)
+        return info_text
+
+    def print_virtual_memory_info(self):
+        print(self.get_info())
 
 
 if __name__ == '__main__':

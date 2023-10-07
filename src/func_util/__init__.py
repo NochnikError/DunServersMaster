@@ -1,8 +1,8 @@
-# from .CPU import cpu
-# import DISK
-# import NET
-# import PID
+# import disk
+# import cpu
+# import net
+# import pid
 # import ram_usage
-# import USERS
-#
-# __all__ = ['cpu', 'DISK', 'NET', 'PID', 'ram_usage', 'USERS']
+# import users
+
+__all__ = ['cpu', 'disk', 'net', 'pid', 'ram_usage', 'users']
