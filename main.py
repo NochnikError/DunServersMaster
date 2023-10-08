@@ -1,10 +1,15 @@
 import dotenv
 import telebot
+import logging
 from telebot import types
+from src.func_util.cpu import CpuUsageInfo, RamUsageInfo, DiskUsageInfo
 
-from src.func_util.cpu import CpuUsageInfo, RamUsageInfo
+# logger = telebot.logger
+# telebot.logger.basicConfig(filename='test.log', level=logging.DEBUG,
+#                            format=' %(asctime)s - %(levelname)s - %(message)s')
 
-version = 0.02
+
+version = 0.03
 SYSTEM_INFO_CAPTION = "/menu"
 config = dotenv.dotenv_values()
 bot = telebot.TeleBot(config['API_KEY'])
@@ -13,7 +18,7 @@ print(config['teg'])
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "As`Salam Aleikum, brat!")
+    bot.reply_to(message, "Welcome to the club, goi!")
 
 
 def make_menu(message):
@@ -47,7 +52,6 @@ def button_message(message):
         markup.add(btn_usr)
         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
     elif message.text == "CPU":
-        bot.send_message(message.chat.id, "CPU_INFO")
         cpu_info = CpuUsageInfo()
         bot.send_message(message.chat.id, text=cpu_info.get_info_time())
     elif message.text == "DISK":
