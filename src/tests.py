@@ -1,6 +1,26 @@
 import psutil
+import time
+saw = 132163232
+print(psutil.cpu_count(logical=False))
 from psutil._common import bytes2human
-
+# class cpu():
+#     def __init__(self, core, load, freq, freq_max):
+#         self.core = core
+#         self.load = load
+#         self.freq = freq
+#         self.fraq_max = freq_max
+#
+#     def conclusion(self):
+#         print("\nCPU\n" "\n Количество ядер: " + str(self.core) + "\nКоличество потоков: " + str(
+#             self.load) + " \n Нагрузка на ЦП: " + str(
+#             self.freq) + "%" + "\nТекущая частота процессора: " + str(self.fraq_max) + "MHz")
+#
+#
+# command_cpu = cpu()
+#
+# command_cpu.conclusion()
+#
+# print(psutil.swap_memory())
 # def pprint_ntuple(self, nt):
 #     for name in nt._fields:
 #         value = getattr(nt, name)
@@ -18,26 +38,26 @@ from psutil._common import bytes2human
 
 
 
-mem = str(psutil.virtual_memory())
-
-mem1 = mem.replace('svmem', '')
-mem11 = mem1.replace('(', '')
-mem12 = mem11.replace(')', '')
-mem13 = mem12.split(',')
-total = mem13[0]
-usage = mem13[3]
-free = mem13[4]
-percent = mem13[2]
-testss = 'none'
-print(testss.ram_print())
+# mem = str(psutil.virtual_memory())
+#
+# mem1 = mem.replace('svmem', '')
+# mem11 = mem1.replace('(', '')
+# mem12 = mem11.replace(')', '')
+# mem13 = mem12.split(',')
+# total = mem13[0]
+# usage = mem13[3]
+# free = mem13[4]
+# percent = mem13[2]
+# testss = 'none'
+# print(testss.ram_print())
 # mem14 = int(mem13)
 # mem15 = mem14[0:1:4]
 # mem16 = tuple(mem15)
 # mem17 = RAM(mem16)
 # print(mem15.ram_print())
 # mem = mem.split(',')
-print(mem13)
+# print(mem13)
 # print(mem17)
-print(type(mem13))
+# print(type(mem13))
 # mem2 = mem1.remove(1)
 # tram.ram_print()

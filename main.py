@@ -2,7 +2,7 @@ import dotenv
 import telebot
 from telebot import types
 
-from src.func_util.ram_usage import RamUsageInfo
+from src.func_util.cpu import CpuUsageInfo, RamUsageInfo
 
 version = 0.02
 SYSTEM_INFO_CAPTION = "/menu"
@@ -36,25 +36,33 @@ def button_message(message):
         btn_net = types.KeyboardButton("NET")
         btn_pid = types.KeyboardButton("PID")
         btn_ram = types.KeyboardButton("RAM")
+        btn_swap = types.KeyboardButton("SWAP")
         btn_usr = types.KeyboardButton("USERS")
         markup.add(btn_cpu)
         markup.add(btn_disk)
         markup.add(btn_net)
         markup.add(btn_pid)
         markup.add(btn_ram)
+        markup.add(btn_swap)
         markup.add(btn_usr)
         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
     elif message.text == "CPU":
         bot.send_message(message.chat.id, "CPU_INFO")
+        cpu_info = CpuUsageInfo()
+        bot.send_message(message.chat.id, text=cpu_info.get_info_time())
     elif message.text == "DISK":
-        bot.send_message(message.chat.id, text="DISK_INFO")
+        disk_info = DiskUsageInfo()
+        bot.send_message(message.chat.id, text=disk_info.mount_get_info())
     elif message.text == "NET":
         bot.send_message(message.chat.id, text="NET_INFO")
     elif message.text == "PID":
         bot.send_message(message.chat.id, text="PID_INFO")
     elif message.text == "RAM":
         ram_info = RamUsageInfo()
-        bot.send_message(message.chat.id, text=ram_info.get_info())
+        bot.send_message(message.chat.id, text=ram_info.ram_get_info())
+    elif message.text == "SWAP":
+        swap_info = RamUsageInfo()
+        bot.send_message(message.chat.id, text=swap_info.swap_get_info())
     elif message.text == "USERS":
         bot.send_message(message.chat.id, text="USERS_INFO")
 
