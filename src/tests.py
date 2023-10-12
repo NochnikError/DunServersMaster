@@ -1,63 +1,41 @@
-import psutil
-import time
-saw = 132163232
-print(psutil.cpu_count(logical=False))
-from psutil._common import bytes2human
-# class cpu():
-#     def __init__(self, core, load, freq, freq_max):
-#         self.core = core
-#         self.load = load
-#         self.freq = freq
-#         self.fraq_max = freq_max
+┌────────────┬─────────┐
+│ Device:    │ C:\\     │
+│ Total:     │ 166.0G  │
+│ Used:      │ 92.2G   │
+│ Free:      │ 73.8G   │
+│ Use:       │    55%  │
+│ Type:      │ NTFS    │
+│ Mount:     │ C:\\     │
+└────────────┴─────────┘
+┌────────────┬─────────┐
+│ Device:    │ C:\     │
+│ Total:     │ 166.0G  │
+│ Used:      │ 92.2G   │
+│ Free:      │ 73.8G   │
+│ Use:       │    55%  │
+│ Type:      │ NTFS    │
+│ Mount:     │ C:\     │
+└────────────┴─────────┘
+---------
+┌────────────┬─────────┐
+│ Device:    │ D:\     │
+│ Total:     │ 14.4G   │
+│ Used:      │ 4.4G    │
+│ Free:      │ 10.1G   │
+│ Use:       │    30%  │
+│ Type:      │ NTFS    │
+│ Mount:     │ D:\     │
+└────────────┴─────────┘
+'
 #
-#     def conclusion(self):
-#         print("\nCPU\n" "\n Количество ядер: " + str(self.core) + "\nКоличество потоков: " + str(
-#             self.load) + " \n Нагрузка на ЦП: " + str(
-#             self.freq) + "%" + "\nТекущая частота процессора: " + str(self.fraq_max) + "MHz")
+#
+# def on_terminate(proc):
+#     print(f"Процесс {proc} завершается с кодом {proc.returncode}")
 #
 #
-# command_cpu = cpu()
-#
-# command_cpu.conclusion()
-#
-# print(psutil.swap_memory())
-# def pprint_ntuple(self, nt):
-#     for name in nt._fields:
-#         value = getattr(nt, name)
-#         if name != 'percent':
-#             value = bytes2human(value)
-#         print('%-10s : %7s' % (name.capitalize(), value))
-# def main(self):
-#     print('MEMORY\n------')
-#     pprint_ntuple(psutil.virtual_memory())
-#     print('\nSWAP\n----')
-#     pprint_ntuple(psutil.swap_memory())
-# #
-# if __name__ == '__main__':
-#     main()
-
-
-
-# mem = str(psutil.virtual_memory())
-#
-# mem1 = mem.replace('svmem', '')
-# mem11 = mem1.replace('(', '')
-# mem12 = mem11.replace(')', '')
-# mem13 = mem12.split(',')
-# total = mem13[0]
-# usage = mem13[3]
-# free = mem13[4]
-# percent = mem13[2]
-# testss = 'none'
-# print(testss.ram_print())
-# mem14 = int(mem13)
-# mem15 = mem14[0:1:4]
-# mem16 = tuple(mem15)
-# mem17 = RAM(mem16)
-# print(mem15.ram_print())
-# mem = mem.split(',')
-# print(mem13)
-# print(mem17)
-# print(type(mem13))
-# mem2 = mem1.remove(1)
-# tram.ram_print()
+# procs = psutil.Process().children()
+# for p in procs:
+#     p.terminate()
+# gone, alive = psutil.wait_procs(procs, timeout=3, callback=on_terminate)
+# for p in alive:
+#     p.kill()
