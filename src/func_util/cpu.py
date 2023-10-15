@@ -1,16 +1,11 @@
 import datetime
 import re
 from pprint import pprint as pp
-
 import psutil
 from psutil._common import bytes2human
 from rich.console import Console
 from rich.table import Table, Column
 
-
-# saw=436563643
-# delta = timedelta(seconds=saw)
-# print(delta)
 class CpuUsageInfo:
     def get_info_time(self):
         print('\n------------\nСтатистика времени использования CPU\n------------\n')
@@ -82,7 +77,6 @@ class RamUsageInfo:
 
 
 class DiskUsageInfo:
-     # _template = "Device: %-\nTotal: Used: %8s\nFree: %8s\nUse: %5s%%\nType: %3s\nMount: %s\n"
     _error_expression = re.compile(r'(.+)(\n+|\.+.+)')
     _console = Console(width=24)
 
@@ -91,20 +85,11 @@ class DiskUsageInfo:
         print(self.get_stats_message())
 
     def get_stats_message(self):
-        # header = self._template
         disks_stats = []
 
         for part in psutil.disk_partitions(all=True):
             try:
                 usage = psutil.disk_usage(part.mountpoint)
-                # stats = (self._template % (
-                #     part.device,
-                #     bytes2human(usage.total),
-                #     bytes2human(usage.used),
-                #     bytes2human(usage.free),
-                #     int(usage.percent),
-                #     part.fstype,
-                #     part.mountpoint))
                 stats = {
                     'device': part.device,
                     'total': bytes2human(usage.total),
@@ -115,13 +100,7 @@ class DiskUsageInfo:
                     'mount': part.mountpoint
                 }
 
-                grid = Table(show_header=False, expand=True, width=26, min_width=26)
-                # grid.add_column() # max_width=10, min_width=10,
-                # grid.add_column(Column(justify='right')) #width=10, max_width=10, min_width=10,
-
-                # grid.add_column(max_width=14, min_width=14, overflow='fold', no_wrap=True)
-                # grid.add_column(width=10, max_width=10, min_width=10, justify='right', overflow='fold', no_wrap=True)
-
+                grid = Table(show_header=False, expand=True, width=23, min_width=23)
                 grid.add_row('Device: ', stats['device'])
                 grid.add_row('Total: ', stats['total'])
                 grid.add_row('Used: ', stats['used'])
@@ -139,8 +118,6 @@ class DiskUsageInfo:
                 failed_disk_stats = f'{part.device} ERROR: {message}'
 
                 disks_stats.append(failed_disk_stats)
-
-        # return '---------\n'.join(disks_stats)
         text = '---------\n'.join(disks_stats)
 
         # columns = Columns(text, expand=True)
