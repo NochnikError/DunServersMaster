@@ -3,6 +3,7 @@ import re
 from pprint import pprint as pp
 import psutil
 from psutil._common import bytes2human
+from rich import box
 from rich.console import Console
 from rich.table import Table, Column
 
@@ -77,8 +78,8 @@ class RamUsageInfo:
 
 
 class DiskUsageInfo:
-    _error_expression = re.compile(r'(.+)(\n+|\.+.+)')
-    _console = Console(width=24)
+    __error_expression = re.compile(r'(.+)(\n+|\.+.+)')
+    __console = Console(width=24)
 
     def print_stats(self):
         print('\n------------\nCтатистикa смонтированных разделов диска\n------------\n')
@@ -100,7 +101,7 @@ class DiskUsageInfo:
                     'mount': part.mountpoint
                 }
 
-                grid = Table(show_header=False, expand=True, width=23, min_width=23)
+                grid = Table(show_header=False, width=23, min_width=23, box=box.MARKDOWN)
                 grid.add_row('Device: ', stats['device'])
                 grid.add_row('Total: ', stats['total'])
                 grid.add_row('Used: ', stats['used'])
@@ -109,20 +110,18 @@ class DiskUsageInfo:
                 grid.add_row('Type: ', stats['type'])
                 grid.add_row('Mount: ', stats['mount'])
 
-                with self._console.capture() as capture:
-                    self._console.print(grid)
+                with self.__console.capture() as capture:
+                    self.__console.print(grid)
 
                 disks_stats.append(capture.get())
             except OSError as err:
-                message = self._error_expression.match(str(err)).group().strip()
+                message = self.__error_expression.match(str(err)).group().strip()
                 failed_disk_stats = f'{part.device} ERROR: {message}'
 
                 disks_stats.append(failed_disk_stats)
         text = '---------\n'.join(disks_stats)
 
-        # columns = Columns(text, expand=True)
-        # columns = Columns(disks_stats, expand=True)
-        return '`' + '\n' + text + '\n' + '`'
+        return '<pre><code class="language-python">' + text + '</code></pre>'
 
 
 # def iotop(self):

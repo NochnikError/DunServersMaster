@@ -117,7 +117,7 @@ def button_message(message):
         bot.send_message(message.chat.id, text=swap_info.swap_get_info())
     elif message.text == "/disk":
         disk_info = DiskUsageInfo()
-        bot.send_message(message.chat.id, text=disk_info.get_stats_message())
+        bot.send_message(message.chat.id, text=disk_info.get_stats_message(), parse_mode="HTML")
     elif message.text == "/net":
         net_info = NetUsageInfo()
         bot.send_message(message.chat.id, text=net_info.net_get_info_all_io())
