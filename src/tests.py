@@ -6,18 +6,19 @@ try:
     connection = psycopg2.connect(user="postgres", password="postgres", host="localhost", port="5432", database="postgres")
 
     cursor = connection.cursor()
-    # create_table_query = '''CREATE TABLE login_bot
-    #                       (ID_USER INT PRIMARY KEY     ,
-    #                       FIRST_NAME           TEXT    ,
-    #                       LAST_NAME            TEXT    ,
-    #                       USERNAME             TEXT    ,
-    #                       ACCESS_LEVEL         TEXT    ,
-    #                       LOGIN_USER           TEXT    ,
-    #                       PASSWORD_USER        TEXT
-    #                       );'''
-    # cursor.execute(create_table_query)
-    # connection.commit()
-    # print("BD created.")
+    create_table_query = '''CREATE TABLE login_bot
+                          (ID_USER INT PRIMARY KEY     ,
+                          FIRST_NAME           TEXT    ,
+                          LAST_NAME            TEXT    ,
+                          USERNAME             TEXT    ,
+                          ACCESS_LEVEL         TEXT    ,
+                          SALT                 TEXT    ,
+                          LOGIN_HASH           TEXT    ,
+                          PASSWORD_HASH        TEXT    ,
+                          REGISTARED          BOOL);'''
+    cursor.execute(create_table_query)
+    connection.commit()
+    print("BD created.")
     fsj = (2178717, "test", "tset", "hui")
     cursor.execute("INSERT INTO login_bot (id_user, first_name,  last_name, username) VALUES (%s, %s, %s, %s)", fsj)
     connection.commit()

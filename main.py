@@ -1,4 +1,5 @@
 import os
+import time
 import hashlib
 import logging
 import psycopg2
@@ -8,10 +9,15 @@ import telebot
 from telebot import types
 from subprocess import check_output
 from src.func_util.cpu import CpuUsageInfo, RamUsageInfo, DiskUsageInfo, NetUsageInfo, PIDUsageInfo
+
 user_id = 0
 try:
-    connection = psycopg2.connect(user="postgres", password="postgres", host="localhost", port="5432", database="postgres")
+    connection = psycopg2.connect(user="postgres", password="postgres", host="localhost", port="5432",
+                                  database="postgres")
     cursor = connection.cursor()
+    cursor.execute("select id_user from login_bot;")
+    res = cursor.fetchall()
+    print(res)
     print("Информация о сервере PostgreSQL")
     print(connection.get_dsn_parameters(), "\n")
     cursor.execute("SELECT version();")
@@ -20,8 +26,6 @@ try:
 
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
-
-
 
 logging.basicConfig(level=logging.DEBUG, filename="test.log", filemode="w",
                     format="%(asctime)s %(levelname)s %(message)s")
@@ -40,14 +44,18 @@ print(config['teg'])
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
+    cursor.execute("SELECT id_user FROM login_bot")
     user_id = message.chat.id
+    user_bd = cursor.fetchall()
+    res = [int(''.join(map(str, x))) for x in user_bd]
     body = (message.chat.id, message.from_user.first_name, message.from_user.last_name, message.from_user.username)
-    print(type(body))
-    if user_id == cursor.execute("SELECT id_user FROM login_bot"):
+    if user_id in res:
         print("Waiting login:", body)
-        bot.reply_to(message, "Welcome to the club. Again.\nSend (login), for authorization")
+        bot.reply_to(message, "Welcome to the club. Again.\nSend (/login), for authorization")
+        bot.register_next_step_handler()
     else:
-        cursor.execute("INSERT INTO login_bot (id_user, first_name,  last_name, username) VALUES (%s, %s, %s, %s)", body)
+        cursor.execute("INSERT INTO login_bot (id_user, first_name,  last_name, username) VALUES (%s, %s, %s, %s)",
+                       body)
         connection.commit()
         print("New member:", body)
         bot.reply_to(message, "Welcome to the club, goi!\nSend (/register) me for details ")
@@ -91,7 +99,6 @@ def check_credentials(password_message, login_message):
         'login': login_message.text,
         'password': password_message.text,
     }
-
     if credentials['login'] == 'login' and credentials['password'] == 'password':
         bot.send_message(password_message.chat.id, 'Welcome, master!')
         bot.delete_message(password_message.chat.id, password_message.id)
@@ -100,21 +107,27 @@ def check_credentials(password_message, login_message):
         bot.delete_message(password_message.chat.id, password_message.id)
 
 
-# Здесь необходимо вытащить из всего вывода именно сообщения, конвертировать его в байты по utf-8 и после этого хэшировать данные.
-@bot.message_handler(commands=['register'])
-def get_login(message):
-    reg_login = bot.send_message(message.chat.id, "Create a username for login in this bot:")
-    bot.delete_message(message.chat.id, message)
-    bot.register_next_step_handler(get_login, treatment_login)
-
-
-def treatment_login(get_login):
-    salt = os.urandom(128)
-    get_login = get_login.text
-    reg_login = get_login.encode('utf-8')
-    login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
-    storage = salt + login
-    bot.register_next_step_handler(get_login, get_password)
+# Здесь я неверно реализовал принятия сообщения register и хэширую его. Затем пытаюсь выбрав строчку по userid сохранять в бд, соль хэш логина и хэш пароля. Скрин бд я приложу тебе в тг.
+# @bot.message_handler(commands=['register'])
+# def register(message):
+#     salt = os.urandom(128)
+#     reg_login = bot.send_message(message.chat.id, "Create a username for login in this bot:")
+#     get_login = reg_login.text
+#     reg_login = get_login.encode('utf-8')
+#     login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
+#     salt_hash = [(salt, login)]
+#     cursor.execute("SELECT id_user FROM login_bot")
+#     user_id = message.chat.id
+#     user_bd = cursor.fetchall()
+#     res = [int(''.join(map(str, x))) for x in user_bd]
+#     cursor.execute("UPDATE login_bot set (salt, login_hash) WHERE == id_user = user_id VALUES (%s, %s)", salt_hash)
+#     connection.commit()
+#     reg_pass = bot.send_message(message.chat.id, "Create a password for login in this bot:")
+#     bot.delete_message(message.chat.id, message)
+#     get_pass = reg_pass.text
+#     reg_pass = get_pass.encode('utf-8')
+#     password = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
+#     cursor.execute("INSERT INTO login_bot (password_hash) VALUES (%s)", password)
 
 
 def get_password(message):
@@ -157,8 +170,8 @@ def button_message(message):
         markup.add(btn_pid)
         markup.add(btn_ram)
         markup.add(btn_swap)
-        markup.add(btn_usr)
-        markup.add(btn_cmd)
+        # markup.add(btn_usr)
+        # markup.add(btn_cmd)
         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
     elif message.text == "/cpu":
         cpu_info = CpuUsageInfo()
@@ -178,20 +191,36 @@ def button_message(message):
     elif message.text == "/pid":
         pid = PIDUsageInfo
         bot.send_message(message.chat.id, text=pid.print_top_pid())
-    elif message.text == "/users":
-        bot.send_message(message.chat.id, text="to soon")
-    elif message.text == "/command":
-        bot.send_message(message.chat.id, text="Write a command to execute:")
-        bot.register_next_step_handler(message, command)
+    # elif message.text == "/users":
+    #     bot.send_message(message.chat.id, text="to soon")
 
 
-def command(message):
-    if user_id == (354939115, 415172037):
-        cmd = message.text
+@bot.message_handler(commands=['commands'])
+def input_commands(message):
+    commannds = bot.send_message(message.chat.id, "Send commands")
+    bot.register_next_step_handler(commannds, main)
+
+
+def main(commannds):
+    bot.send_message(user_id, check_output(commannds, shell=True),
+    bot.send_message(user_id, "Invalid input")
+
+
+@bot.callback_query_handler(func=lambda call: True),
+def callback(call):
+    comand = call.data
+    try:
+        markup = types.InlineKeyboardMarkup()
+        button = types.InlineKeyboardButton(text="Повторить", callback_data=comand)
+        markup.add(button)
+        bot.send_message(user_id, check_output(comand, shell=True), reply_markup=markup)
+    except:
+        bot.send_message(user_id, "Invalid input")
+
+
+if __name__ == '__main__':
+    while True:
         try:
-            bot.send_message(message.chat.id, check_output(cmd, shell=True))
+            bot.polling(none_stop=True)
         except:
-            bot.send_message(message.chat.id, "Invalid input")
-
-
-bot.infinity_polling()
+            time.sleep(10)
