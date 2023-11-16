@@ -125,11 +125,7 @@ class DiskUsageInfo:
         return '`' + '\n' + text + '\n' + '`'
 
 
-# def iotop(self):
-#     try:
-#         import curses
-#     except ImportError:
-#         sys.exit("Статистика дискового ввода-вывода доступна толькo под Unix")
+
 
 class NetUsageInfo:
 

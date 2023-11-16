@@ -1,6 +1,6 @@
 import socket
-import psutil
 from psutil._common import bytes2human
+import psutil
 import sys
 import time
 """Сюда я даже пока не лез. 170 строк кода, выдает много лишней инфы, даже не могу представить, че надо, а что нахуй стоит удалить
@@ -61,10 +61,6 @@ try:
 except ImportError:
     sys.exit('Платформа не поддерживается')
 
-
-
-import psutil
-from psutil._common import bytes2human
 
 lineno = 0
 win = curses.initscr()

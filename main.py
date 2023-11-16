@@ -7,7 +7,7 @@ from psycopg2 import Error
 import dotenv
 import telebot
 from telebot import types
-from subprocess import check_output
+import subprocess
 from src.func_util.cpu import CpuUsageInfo, RamUsageInfo, DiskUsageInfo, NetUsageInfo, PIDUsageInfo
 
 user_id = 0
@@ -68,7 +68,7 @@ def help(message):
 
 @bot.message_handler(commands=['feedback'])
 def feedback_message(message):
-    test = bot.reply_to(message, "Describe your problem")
+    test = bot.reply_to(message, "Describe your problem:")
     bot.register_next_step_handler(test, out_message)
 
 
@@ -79,27 +79,30 @@ def out_message(message):
 
 
 @bot.message_handler(commands=['login'])
-def test(message):
+def login(message):
     login_message = bot.send_message(message.chat.id, "Send login")
     bot.register_next_step_handler(login_message, auth)
 
 
 def auth(login_message):
-    if login_message.text == "login":
+    select_salt = "SELECT salt FROM login_bot"
+    select_login = "SELECT login_hash FROM logtin_bot"
+
+    login = hashlib.pbkdf2_hmac('sha256', login_message, select_salt, 256000)
+
+    if login == select_login:
         bot.delete_message(login_message.chat.id, login_message.id)
         password_message = bot.send_message(login_message.chat.id, "Send password")
         bot.register_next_step_handler(password_message, check_credentials, login_message)
     else:
         bot.send_message(login_message.chat.id, 'Wrong login. Try again')
+        bot.delete_message(login_message.chat.id, login_message.id)
 
 
-#
+
 def check_credentials(password_message, login_message):
-    credentials = {
-        'login': login_message.text,
-        'password': password_message.text,
-    }
-    if credentials['login'] == 'login' and credentials['password'] == 'password':
+    select_password = "SELECT password_hash FROM login_bot"
+    if select_password == password_message:
         bot.send_message(password_message.chat.id, 'Welcome, master!')
         bot.delete_message(password_message.chat.id, password_message.id)
     else:
@@ -107,49 +110,53 @@ def check_credentials(password_message, login_message):
         bot.delete_message(password_message.chat.id, password_message.id)
 
 
-# Здесь я неверно реализовал принятия сообщения register и хэширую его. Затем пытаюсь выбрав строчку по userid сохранять в бд, соль хэш логина и хэш пароля. Скрин бд я приложу тебе в тг.
-# @bot.message_handler(commands=['register'])
-# def register(message):
-#     salt = os.urandom(128)
-#     reg_login = bot.send_message(message.chat.id, "Create a username for login in this bot:")
-#     get_login = reg_login.text
-#     reg_login = get_login.encode('utf-8')
-#     login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
-#     salt_hash = [(salt, login)]
-#     cursor.execute("SELECT id_user FROM login_bot")
-#     user_id = message.chat.id
-#     user_bd = cursor.fetchall()
-#     res = [int(''.join(map(str, x))) for x in user_bd]
-#     cursor.execute("UPDATE login_bot set (salt, login_hash) WHERE == id_user = user_id VALUES (%s, %s)", salt_hash)
-#     connection.commit()
-#     reg_pass = bot.send_message(message.chat.id, "Create a password for login in this bot:")
-#     bot.delete_message(message.chat.id, message)
-#     get_pass = reg_pass.text
-#     reg_pass = get_pass.encode('utf-8')
-#     password = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
-#     cursor.execute("INSERT INTO login_bot (password_hash) VALUES (%s)", password)
-
-
+@bot.message_handler(commands=['register'])
+def get_login(message):
+    reg_login_message = bot.send_message(message.chat.id, "Create a username for login in this bot:")
+    bot.register_next_step_handler(reg_login_message, register_login)
+    bot.delete_message(message.chat.id, message)
 def get_password(message):
-    reg_pass = bot.send_message(message.chat.id, "Cool, create a password:")
-    salt_for_pass = os.urandom(256)
-    password = hashlib.pbkdf2_hmac('sha256', reg_pass.text, salt_for_pass, 512000)
-    storage = salt_for_pass + password
-    bot.delete_message(message.chat.id, reg_pass.chat.id)
+    reg_pass_message = bot.send_message(message.chat.id, "Create a password for login in this bot:")
+    bot.register_next_step_handler(reg_pass_message, register_password)
+    bot.delete_message(message.chat.id, message)
+def register_login(reg_login_message, message):
+    salt = os.urandom(128)
+    get_login = reg_login_message.text
+    reg_login = get_login.encode('utf-8')
+    login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
+    user_id = message.chat.id
+    update_q = ("UPDATE login_bot set salt = %s WHERE id_user = %s")
+    data = (salt, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
+    update_q = ("UPDATE login_bot set login_hash = %s WHERE id_user = %s")
+    data = (login, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
+    bot.register_next_step_handler(salt, get_password)
+def register_password(salt, reg_pass_message):
+    get_pass = reg_pass_message.text
+    reg_pass = get_pass.encode('utf-8')
+    password_hash = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
+    update_q = ("UPDATE login_bot set password_hash = %s WHERE id_user = %s")
+    data = (password_hash, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
+
 
 
 @bot.message_handler(commands=['menu'])
 def menu_message(message):
-    trank = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     btn_stats = types.KeyboardButton("/stats")
     btn_feedback = types.KeyboardButton("/feedback")
     btn_register = types.KeyboardButton("/register")
     btn_login = types.KeyboardButton("/login")
-    trank.add(btn_login)
-    trank.add(btn_register)
-    trank.add(btn_feedback)
-    trank.add(btn_stats)
-    bot.send_message(message.chat.id, 'Press the required button', reply_markup=trank)
+    markup.add(btn_login)
+    markup.add(btn_register)
+    markup.add(btn_feedback)
+    markup.add(btn_stats)
+    bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
 
 
 @bot.message_handler(content_types='text')
@@ -195,27 +202,59 @@ def button_message(message):
     #     bot.send_message(message.chat.id, text="to soon")
 
 
-@bot.message_handler(commands=['commands'])
-def input_commands(message):
-    commannds = bot.send_message(message.chat.id, "Send commands")
-    bot.register_next_step_handler(commannds, main)
+@bot.message_handler(commands=['command', 'New command'])
+def input_command(message):
+    get_command_message = bot.send_message(message.chat.id, "Send me command for execution in server: ")
+    bot.register_next_step_handler(get_command_message, return_result)
+def return_result(get_command_message):
+    completed = subprocess.check_output([get_command_message.text])
+    bot.send_message(get_command_message.chat.id, completed)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    repeat_btn = types.KeyboardButton("New command")
+    markup.add(repeat_btn)
 
 
-def main(commannds):
-    bot.send_message(user_id, check_output(commannds, shell=True),
-    bot.send_message(user_id, "Invalid input")
 
-
-@bot.callback_query_handler(func=lambda call: True),
-def callback(call):
-    comand = call.data
-    try:
-        markup = types.InlineKeyboardMarkup()
-        button = types.InlineKeyboardButton(text="Повторить", callback_data=comand)
-        markup.add(button)
-        bot.send_message(user_id, check_output(comand, shell=True), reply_markup=markup)
-    except:
-        bot.send_message(user_id, "Invalid input")
+# @bot.message_handler(content_types='text')
+# def button_list_command(message):
+#     if message.text == "/command":
+#         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+#         btn_ls = types.KeyboardButton("ls")
+#         btn_ipa = types.KeyboardButton("ip a")
+#         btn_ifconfig = types.KeyboardButton("ifconfig")
+#         btn_update = types.KeyboardButton("apt update")
+#         btn_reboot = types.KeyboardButton("reboot")
+#         btn_shutdown = types.KeyboardButton("shutdown")
+#         btn_ping = types.KeyboardButton("ping")
+#         markup.add(btn_ls)
+#         markup.add(btn_ipa)
+#         markup.add(btn_ifconfig)
+#         markup.add(btn_update)
+#         markup.add(btn_reboot)
+#         markup.add(btn_shutdown)
+#         markup.add(btn_ping)
+#         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
+#     elif message.text == "ls":
+#         result = subprocess.run(["ls"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "ip a":
+#         result = subprocess.run(["ip a"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "ifconfig":
+#         result = subprocess.run(["ifconfig"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "apt update":
+#         result = subprocess.run(["sudo apt update && sudo apt dist-upgrade"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "reboot":
+#         result = subprocess.run(["sudo reboot now"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "shutdown":
+#         result = subprocess.run(["sudo shutdown now"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
+#     elif message.text == "ping":
+#         result = subprocess.run(["ping 8.8.8.8"], capture_output=True)
+#         bot.send_message(message.chat.id, result.stdout.decode)
 
 
 if __name__ == '__main__':
