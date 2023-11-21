@@ -1,7 +1,7 @@
 import hashlib
 import logging
-import os
-import subprocess
+# import os
+# import subprocess
 import time
 
 import dotenv
@@ -208,18 +208,18 @@ def button_message(message):
     #     bot.send_message(message.chat.id, text="to soon")
 
 
-@bot.message_handler(commands=['command', 'New command'])
-def input_command(message):
-    get_command_message = bot.send_message(message.chat.id, "Send me command for execution in server: ")
-    bot.register_next_step_handler(get_command_message, return_result)
-
-
-def return_result(get_command_message):
-    completed = subprocess.check_output([get_command_message.text])
-    bot.send_message(get_command_message.chat.id, completed)
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    repeat_btn = types.KeyboardButton("New command")
-    markup.add(repeat_btn)
+# @bot.message_handler(commands=['command', 'New command'])
+# def input_command(message):
+#     get_command_message = bot.send_message(message.chat.id, "Send me command for execution in server: ")
+#     bot.register_next_step_handler(get_command_message, return_result)
+#
+#
+# def return_result(get_command_message):
+#     completed = subprocess.check_output([get_command_message.text])
+#     bot.send_message(get_command_message.chat.id, completed)
+#     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+#     repeat_btn = types.KeyboardButton("New command")
+#     markup.add(repeat_btn)
 
 
 if __name__ == '__main__':
