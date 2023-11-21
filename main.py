@@ -1,13 +1,15 @@
-import os
-import time
 import hashlib
 import logging
-import psycopg2
-from psycopg2 import Error
-import dotenv
-import telebot
-from telebot import types
+import os
 import subprocess
+import time
+
+import dotenv
+import psycopg2
+import telebot
+from psycopg2 import Error
+from telebot import types
+
 from src.func_util.cpu import CpuUsageInfo, RamUsageInfo, DiskUsageInfo, NetUsageInfo, PIDUsageInfo
 
 user_id = 0
@@ -99,7 +101,6 @@ def auth(login_message):
         bot.delete_message(login_message.chat.id, login_message.id)
 
 
-
 def check_credentials(password_message, login_message):
     select_password = "SELECT password_hash FROM login_bot"
     if select_password == password_message:
@@ -110,39 +111,44 @@ def check_credentials(password_message, login_message):
         bot.delete_message(password_message.chat.id, password_message.id)
 
 
-@bot.message_handler(commands=['register'])
-def get_login(message):
-    reg_login_message = bot.send_message(message.chat.id, "Create a username for login in this bot:")
-    bot.register_next_step_handler(reg_login_message, register_login)
-    bot.delete_message(message.chat.id, message)
-def get_password(message):
-    reg_pass_message = bot.send_message(message.chat.id, "Create a password for login in this bot:")
-    bot.register_next_step_handler(reg_pass_message, register_password)
-    bot.delete_message(message.chat.id, message)
-def register_login(reg_login_message, message):
-    salt = os.urandom(128)
-    get_login = reg_login_message.text
-    reg_login = get_login.encode('utf-8')
-    login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
-    user_id = message.chat.id
-    update_q = ("UPDATE login_bot set salt = %s WHERE id_user = %s")
-    data = (salt, user_id)
-    cursor.execute(update_q, data)
-    connection.commit()
-    update_q = ("UPDATE login_bot set login_hash = %s WHERE id_user = %s")
-    data = (login, user_id)
-    cursor.execute(update_q, data)
-    connection.commit()
-    bot.register_next_step_handler(salt, get_password)
-def register_password(salt, reg_pass_message):
-    get_pass = reg_pass_message.text
-    reg_pass = get_pass.encode('utf-8')
-    password_hash = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
-    update_q = ("UPDATE login_bot set password_hash = %s WHERE id_user = %s")
-    data = (password_hash, user_id)
-    cursor.execute(update_q, data)
-    connection.commit()
-
+# @bot.message_handler(commands=['register'])
+# def get_login(message):
+#     reg_login_message = bot.send_message(message.chat.id, "Create a username for login in this bot:")
+#     bot.register_next_step_handler(reg_login_message, register_login)
+#     bot.delete_message(message.chat.id, message)
+#
+#
+# def get_password(message):
+#     reg_pass_message = bot.send_message(message.chat.id, "Create a password for login in this bot:")
+#     bot.register_next_step_handler(reg_pass_message, register_password)
+#     bot.delete_message(message.chat.id, message)
+#
+#
+# def register_login(reg_login_message, message):
+#     salt = os.urandom(128)
+#     get_login = reg_login_message.text
+#     reg_login = get_login.encode('utf-8')
+#     login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
+#     user_id = message.chat.id
+#     update_q = ("UPDATE login_bot set salt = %s WHERE id_user = %s")
+#     data = (salt, user_id)
+#     cursor.execute(update_q, data)
+#     connection.commit()
+#     update_q = ("UPDATE login_bot set login_hash = %s WHERE id_user = %s")
+#     data = (login, user_id)
+#     cursor.execute(update_q, data)
+#     connection.commit()
+#     bot.register_next_step_handler(salt, get_password)
+#
+#
+# def register_password(salt, reg_pass_message):
+#     get_pass = reg_pass_message.text
+#     reg_pass = get_pass.encode('utf-8')
+#     password_hash = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
+#     update_q = ("UPDATE login_bot set password_hash = %s WHERE id_user = %s")
+#     data = (password_hash, user_id)
+#     cursor.execute(update_q, data)
+#     connection.commit()
 
 
 @bot.message_handler(commands=['menu'])
@@ -178,7 +184,7 @@ def button_message(message):
         markup.add(btn_ram)
         markup.add(btn_swap)
         # markup.add(btn_usr)
-        # markup.add(btn_cmd)
+        markup.add(btn_cmd)
         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
     elif message.text == "/cpu":
         cpu_info = CpuUsageInfo()
@@ -206,55 +212,14 @@ def button_message(message):
 def input_command(message):
     get_command_message = bot.send_message(message.chat.id, "Send me command for execution in server: ")
     bot.register_next_step_handler(get_command_message, return_result)
+
+
 def return_result(get_command_message):
     completed = subprocess.check_output([get_command_message.text])
     bot.send_message(get_command_message.chat.id, completed)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     repeat_btn = types.KeyboardButton("New command")
     markup.add(repeat_btn)
-
-
-
-# @bot.message_handler(content_types='text')
-# def button_list_command(message):
-#     if message.text == "/command":
-#         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-#         btn_ls = types.KeyboardButton("ls")
-#         btn_ipa = types.KeyboardButton("ip a")
-#         btn_ifconfig = types.KeyboardButton("ifconfig")
-#         btn_update = types.KeyboardButton("apt update")
-#         btn_reboot = types.KeyboardButton("reboot")
-#         btn_shutdown = types.KeyboardButton("shutdown")
-#         btn_ping = types.KeyboardButton("ping")
-#         markup.add(btn_ls)
-#         markup.add(btn_ipa)
-#         markup.add(btn_ifconfig)
-#         markup.add(btn_update)
-#         markup.add(btn_reboot)
-#         markup.add(btn_shutdown)
-#         markup.add(btn_ping)
-#         bot.send_message(message.chat.id, 'Press the required button', reply_markup=markup)
-#     elif message.text == "ls":
-#         result = subprocess.run(["ls"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "ip a":
-#         result = subprocess.run(["ip a"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "ifconfig":
-#         result = subprocess.run(["ifconfig"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "apt update":
-#         result = subprocess.run(["sudo apt update && sudo apt dist-upgrade"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "reboot":
-#         result = subprocess.run(["sudo reboot now"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "shutdown":
-#         result = subprocess.run(["sudo shutdown now"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
-#     elif message.text == "ping":
-#         result = subprocess.run(["ping 8.8.8.8"], capture_output=True)
-#         bot.send_message(message.chat.id, result.stdout.decode)
 
 
 if __name__ == '__main__':

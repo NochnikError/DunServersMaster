@@ -120,8 +120,6 @@ class DiskUsageInfo:
                 disks_stats.append(failed_disk_stats)
         text = '---------\n'.join(disks_stats)
 
-        # columns = Columns(text, expand=True)
-        # columns = Columns(disks_stats, expand=True)
         return '`' + '\n' + text + '\n' + '`'
 
 
