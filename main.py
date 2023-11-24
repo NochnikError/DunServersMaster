@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 # import os
 # import subprocess
 import time
@@ -14,7 +15,7 @@ from src.func_util.cpu import CpuUsageInfo, RamUsageInfo, DiskUsageInfo, NetUsag
 
 user_id = 0
 try:
-    connection = psycopg2.connect(user="postgres", password="postgres", host="localhost", port="5432",
+    connection = psycopg2.connect(user="postgres", password="1029384756", host="localhost", port="5434",
                                   database="postgres")
     cursor = connection.cursor()
     cursor.execute("select id_user from login_bot;")
@@ -87,6 +88,7 @@ def login(message):
 
 
 def auth(login_message):
+    print(login_message.text)
     select_salt = "SELECT salt FROM login_bot"
     select_login = "SELECT login_hash FROM logtin_bot"
 
@@ -111,44 +113,46 @@ def check_credentials(password_message, login_message):
         bot.delete_message(password_message.chat.id, password_message.id)
 
 
-# @bot.message_handler(commands=['register'])
-# def get_login(message):
-#     reg_login_message = bot.send_message(message.chat.id, "Create a username for login in this bot:")
-#     bot.register_next_step_handler(reg_login_message, register_login)
-#     bot.delete_message(message.chat.id, message)
-#
-#
-# def get_password(message):
-#     reg_pass_message = bot.send_message(message.chat.id, "Create a password for login in this bot:")
-#     bot.register_next_step_handler(reg_pass_message, register_password)
-#     bot.delete_message(message.chat.id, message)
-#
-#
-# def register_login(reg_login_message, message):
-#     salt = os.urandom(128)
-#     get_login = reg_login_message.text
-#     reg_login = get_login.encode('utf-8')
-#     login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
-#     user_id = message.chat.id
-#     update_q = ("UPDATE login_bot set salt = %s WHERE id_user = %s")
-#     data = (salt, user_id)
-#     cursor.execute(update_q, data)
-#     connection.commit()
-#     update_q = ("UPDATE login_bot set login_hash = %s WHERE id_user = %s")
-#     data = (login, user_id)
-#     cursor.execute(update_q, data)
-#     connection.commit()
-#     bot.register_next_step_handler(salt, get_password)
-#
-#
-# def register_password(salt, reg_pass_message):
-#     get_pass = reg_pass_message.text
-#     reg_pass = get_pass.encode('utf-8')
-#     password_hash = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
-#     update_q = ("UPDATE login_bot set password_hash = %s WHERE id_user = %s")
-#     data = (password_hash, user_id)
-#     cursor.execute(update_q, data)
-#     connection.commit()
+@bot.message_handler(commands=['register'])
+def get_login(message):
+    reg_login_message = bot.send_message(message.chat.id, "Create a username for login in this bot:")
+    bot.register_next_step_handler(reg_login_message, register_login)
+
+
+def get_password(message):
+    reg_pass_message = bot.send_message(message.chat.id, "Create a password for login in this bot:")
+    bot.register_next_step_handler(reg_pass_message, register_password)
+    bot.delete_message(message.chat.id, message)
+
+
+def register_login(reg_login_message):
+    print(reg_login_message.text)
+    salt = os.urandom(128)
+    get_login = reg_login_message.text
+    reg_login = get_login.encode('utf-8')
+    login = hashlib.pbkdf2_hmac('sha256', reg_login, salt, 256000)
+    user_id = reg_login_message.chat.id
+    update_q = ("UPDATE login_bot set salt = %s WHERE id_user = %s")
+    data = (salt, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
+    update_q = ("UPDATE login_bot set login_hash = %s WHERE id_user = %s")
+    data = (login, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
+
+    bot.delete_message(reg_login_message.chat.id, reg_login_message.id)
+    bot.register_next_step_handler(salt, get_password)
+
+
+def register_password(salt, reg_pass_message):
+    get_pass = reg_pass_message.text
+    reg_pass = get_pass.encode('utf-8')
+    password_hash = hashlib.pbkdf2_hmac('sha256', reg_pass, salt, 256000)
+    update_q = ("UPDATE login_bot set password_hash = %s WHERE id_user = %s")
+    data = (password_hash, user_id)
+    cursor.execute(update_q, data)
+    connection.commit()
 
 
 @bot.message_handler(commands=['menu'])

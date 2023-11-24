@@ -88,36 +88,28 @@ class DiskUsageInfo:
         disks_stats = []
 
         for part in psutil.disk_partitions(all=True):
-            try:
-                usage = psutil.disk_usage(part.mountpoint)
-                stats = {
-                    'device': part.device,
-                    'total': bytes2human(usage.total),
-                    'used': bytes2human(usage.used),
-                    'free': bytes2human(usage.free),
-                    'use': int(usage.percent),
-                    'type': part.fstype,
-                    'mount': part.mountpoint
-                }
+            usage = psutil.disk_usage(part.mountpoint)
+            stats = {
+                'device': part.device,
+                'total': bytes2human(usage.total),
+                'used': bytes2human(usage.used),
+                'free': bytes2human(usage.free),
+                'use': int(usage.percent),
+                'type': part.fstype,
+                'mount': part.mountpoint
+            }
+            grid = Table(show_header=False, expand=True, width=23, min_width=23)
+            grid.add_row('Device: ', stats['device'])
+            grid.add_row('Total: ', stats['total'])
+            grid.add_row('Used: ', stats['used'])
+            grid.add_row('Free: ', stats['free'])
+            grid.add_row('Use: ', f'{stats["use"]}%')
+            grid.add_row('Type: ', stats['type'])
+            grid.add_row('Mount: ', stats['mount'])
 
-                grid = Table(show_header=False, expand=True, width=23, min_width=23)
-                grid.add_row('Device: ', stats['device'])
-                grid.add_row('Total: ', stats['total'])
-                grid.add_row('Used: ', stats['used'])
-                grid.add_row('Free: ', stats['free'])
-                grid.add_row('Use: ', f'{stats["use"]}%')
-                grid.add_row('Type: ', stats['type'])
-                grid.add_row('Mount: ', stats['mount'])
-
-                with self._console.capture() as capture:
-                    self._console.print(grid)
-
-                disks_stats.append(capture.get())
-            except OSError as err:
-                message = self._error_expression.match(str(err)).group().strip()
-                failed_disk_stats = f'{part.device} ERROR: {message}'
-
-                disks_stats.append(failed_disk_stats)
+            with self._console.capture() as capture:
+                self._console.print(grid)
+            disks_stats.append(capture.get())
         text = '---------\n'.join(disks_stats)
 
         return '`' + '\n' + text + '\n' + '`'
